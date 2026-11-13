@@ -1,0 +1,36 @@
+-- One Piece API Project
+
+--Prior Prep, Create Database and SCHEMA
+CREATE DATABASE IF NOT EXISTS onepiece_db;
+CREATE SCHEMA IF NOT EXISTS onepiece_db.api;
+USE SCHEMA onepiece_db.api;
+
+-- Step 1 Create table
+CREATE TABLE onepiece_db.api.raw_characters (data VARIANT);
+--At this point the URL output was saved in VS code, and loaded into the table within the ingestion tab
+-- It is important to note that this is the raw dat
+
+--Test to see if filling the table worked:
+SELECT *
+FROM RAW_CHARACTERS;
+
+--Step 2 Flatten Json file
+CREATE OR REPLACE TABLE onepiece_db.api.characters AS
+SELECT
+  data:id::INT                                                   AS character_id,
+  data:name::STRING                                              AS name,
+  TRY_TO_NUMBER(REGEXP_REPLACE(data:size::STRING, '[^0-9]', '')) AS size_cm,
+  TRY_TO_NUMBER(REGEXP_REPLACE(data:age::STRING,  '[^0-9]', '')) AS age,
+  TRY_TO_NUMBER(REPLACE(data:bounty::STRING, '.', ''))           AS bounty,
+  data:job::STRING                                               AS job,
+  data:status::STRING                                            AS status,
+  data:crew:id::INT                                              AS crew_id,
+  data:crew:name::STRING                                         AS crew_name,
+  data:crew:is_yonko::BOOLEAN                                    AS crew_is_yonko,
+  data:fruit:id::INT                                             AS fruit_id,
+  data:fruit:name::STRING                                        AS fruit_name,
+  data:fruit:type::STRING                                        AS fruit_type
+FROM onepiece_db.api.raw_characters;
+
+SELECT *
+FROM CHARACTERS;
